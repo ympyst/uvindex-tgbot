@@ -9,6 +9,4 @@ COPY *.go ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /uvindexbot
 
-EXPOSE 8080
-
 CMD ["/uvindexbot"]
