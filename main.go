@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// Set this to true to log all interactions with telegram servers
-	bot.Debug = false
+	bot.Debug = true
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
