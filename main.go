@@ -3,10 +3,10 @@ package main
 import (
 	"bufio"
 	"context"
+	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 	"log"
 	"os"
 	"strings"
-	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )

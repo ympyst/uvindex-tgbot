@@ -2,8 +2,8 @@ package app
 
 import (
 	"context"
-	"log"
 	weatherAPI "github.com/ympyst/uvindex-tgbot/weather"
+	"log"
 )
 
 type App struct {
