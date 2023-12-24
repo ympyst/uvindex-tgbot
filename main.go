@@ -6,38 +6,32 @@ import (
 	"log"
 	"os"
 	"strings"
+	uvindexApp "github.com/ympyst/uvindex/app"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
-	// Menu texts
-	firstMenu  = "<b>Menu 1</b>\n\nA beautiful menu with a shiny inline button."
-	secondMenu = "<b>Menu 2</b>\n\nA better menu with even more shiny inline buttons."
-
+	app *uvindexApp.App
 	// Button texts
-	nextButton     = "Next"
-	backButton     = "Back"
-	tutorialButton = "Tutorial"
+	setLocationBtn = "Set location"
+	setAlertsBtn        = "Set alerts"
+	setUVIndexThreshold = "Set UV index threshold"
 
-	// Store bot screaming status
-	screaming = false
+	// Store curent uv index
+	uv int32
 	bot       *tgbotapi.BotAPI
 
 	// Keyboard layout for the first menu. One button, one row
-	firstMenuMarkup = tgbotapi.NewInlineKeyboardMarkup(
+	menuMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(nextButton, nextButton),
-		),
-	)
-
-	// Keyboard layout for the second menu. Two buttons, one per row
-	secondMenuMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(backButton, backButton),
+			tgbotapi.NewInlineKeyboardButtonData(setLocationBtn, setLocationBtn),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL(tutorialButton, "https://core.telegram.org/bots/api"),
+			tgbotapi.NewInlineKeyboardButtonData(setAlertsBtn, setAlertsBtn),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(setUVIndexThreshold, setUVIndexThreshold),
 		),
 	)
 )
@@ -50,6 +44,8 @@ func main() {
 		// Abort if something is wrong
 		log.Panic(err)
 	}
+
+	app = uvindexApp.NewApp()
 
 	// Set this to true to log all interactions with telegram servers
 	bot.Debug = true
@@ -118,11 +114,6 @@ func handleMessage(message *tgbotapi.Message) {
 	var err error
 	if strings.HasPrefix(text, "/") {
 		err = handleCommand(message.Chat.ID, text)
-	} else if screaming && len(text) > 0 {
-		msg := tgbotapi.NewMessage(message.Chat.ID, strings.ToUpper(text))
-		// To preserve markdown, we attach entities (bold, italic..)
-		msg.Entities = message.Entities
-		_, err = bot.Send(msg)
 	} else {
 		// This is equivalent to forwarding, without the sender's name
 		copyMsg := tgbotapi.NewCopyMessage(message.Chat.ID, message.Chat.ID, message.MessageID)
@@ -139,12 +130,8 @@ func handleCommand(chatId int64, command string) error {
 	var err error
 
 	switch command {
-	case "/scream":
-		screaming = true
-		break
-
-	case "/whisper":
-		screaming = false
+	case "/uv":
+		uv = app.GetCurrentUVIndex(context.Background())
 		break
 
 	case "/menu":
@@ -156,32 +143,24 @@ func handleCommand(chatId int64, command string) error {
 }
 
 func handleButton(query *tgbotapi.CallbackQuery) {
-	var text string
-
 	markup := tgbotapi.NewInlineKeyboardMarkup()
 	message := query.Message
 
-	if query.Data == nextButton {
-		text = secondMenu
-		markup = secondMenuMarkup
-	} else if query.Data == backButton {
-		text = firstMenu
-		markup = firstMenuMarkup
-	}
+	markup = menuMarkup
 
 	callbackCfg := tgbotapi.NewCallback(query.ID, "")
 	bot.Send(callbackCfg)
 
 	// Replace menu text and keyboard
-	msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, text, markup)
+	msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, "", markup)
 	msg.ParseMode = tgbotapi.ModeHTML
 	bot.Send(msg)
 }
 
 func sendMenu(chatId int64) error {
-	msg := tgbotapi.NewMessage(chatId, firstMenu)
+	msg := tgbotapi.NewMessage(chatId, "")
 	msg.ParseMode = tgbotapi.ModeHTML
-	msg.ReplyMarkup = firstMenuMarkup
+	msg.ReplyMarkup = menuMarkup
 	_, err := bot.Send(msg)
 	return err
 }
