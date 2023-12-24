@@ -31,11 +31,16 @@ func (a *App) GetCurrentUVIndex(ctx context.Context) int32 {
 		log.Println(err)
 	}
 
-	cur, ok := res.(map[string]map[string]interface{})
+	m, ok := res.(map[string]interface{})
 	if !ok {
 		log.Println("error converting RealtimeWeather result to map")
 	}
-	uv, ok := cur["current"]["uv"].(float64)
+	cur, ok := m["current"].(map[string]interface{})
+	if !ok {
+		log.Println("error converting RealtimeWeather result to map")
+	}
+	//log.Println(cur)
+	uv, ok := cur["uv"].(float64)
 	if !ok {
 		log.Println("error converting uv to float64")
 	}
