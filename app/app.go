@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"log"
-	weatherAPI "github.com/ympyst/uvindex/weather"
+	weatherAPI "github.com/ympyst/uvindex-tgbot/weather"
 )
 
 type App struct {

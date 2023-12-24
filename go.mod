@@ -1,4 +1,4 @@
-module github.com/ympyst/uvindex
+module github.com/ympyst/uvindex-tgbot
 
 go 1.15
 
