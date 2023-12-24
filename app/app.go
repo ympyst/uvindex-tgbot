@@ -2,8 +2,10 @@ package app
 
 import (
 	"context"
-	"log"
 	weatherAPI "github.com/ympyst/uvindex-tgbot/weather"
+	"log"
+	"math"
+	"os"
 )
 
 type App struct {
@@ -11,10 +13,7 @@ type App struct {
 }
 
 func NewApp() *App {
-	wCfg := &weatherAPI.Configuration{
-		UserAgent:     "UV Index Telegram bot",
-	}
-	wc := weatherAPI.NewAPIClient(wCfg)
+	wc := weatherAPI.NewAPIClient(weatherAPI.NewConfiguration())
 
 	return &App{
 		wc,
@@ -26,11 +25,26 @@ func (a *App) SetLocation(search string) {
 }
 
 func (a *App) GetCurrentUVIndex(ctx context.Context) int32 {
-	res, _, _ := a.weatherClient.APIsApi.RealtimeWeather(ctx, "Москва", nil)
-	cur, ok := res.(weatherAPI.Current)
-	if (!ok) {
-		log.Println("error converting RealtimeWeather result to Current type")
+	authCtx := a.getAuthCtx(ctx)
+	res, _, err := a.weatherClient.APIsApi.RealtimeWeather(authCtx, "Москва", nil)
+	if err != nil {
+		log.Println(err)
 	}
-	return cur.Uv
+
+	cur, ok := res.(map[string]map[string]interface{})
+	if !ok {
+		log.Println("error converting RealtimeWeather result to map")
+	}
+	uv, ok := cur["current"]["uv"].(float64)
+	if !ok {
+		log.Println("error converting uv to float64")
+	}
+	return int32(math.Round(uv))
+}
+
+func (a *App) getAuthCtx(ctx context.Context) context.Context {
+	return context.WithValue(context.Background(), weatherAPI.ContextAPIKey, weatherAPI.APIKey{
+		Key: os.Getenv("WEATHER_API_TOKEN"),
+	})
 }
 

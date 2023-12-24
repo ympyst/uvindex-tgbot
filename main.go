@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"context"
+	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 	"log"
 	"os"
+	"strconv"
 	"strings"
-	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -18,7 +19,7 @@ var (
 	setAlertsBtn        = "Set alerts"
 	setUVIndexThreshold = "Set UV index threshold"
 
-	// Store curent uv index
+	// Store current uv index
 	uv int32
 	bot       *tgbotapi.BotAPI
 
@@ -114,10 +115,6 @@ func handleMessage(message *tgbotapi.Message) {
 	var err error
 	if strings.HasPrefix(text, "/") {
 		err = handleCommand(message.Chat.ID, text)
-	} else {
-		// This is equivalent to forwarding, without the sender's name
-		copyMsg := tgbotapi.NewCopyMessage(message.Chat.ID, message.Chat.ID, message.MessageID)
-		_, err = bot.CopyMessage(copyMsg)
 	}
 
 	if err != nil {
@@ -132,6 +129,8 @@ func handleCommand(chatId int64, command string) error {
 	switch command {
 	case "/uv":
 		uv = app.GetCurrentUVIndex(context.Background())
+		msg := tgbotapi.NewMessage(chatId, strconv.Itoa(int(uv)))
+		bot.Send(msg)
 		break
 
 	case "/menu":
@@ -143,18 +142,16 @@ func handleCommand(chatId int64, command string) error {
 }
 
 func handleButton(query *tgbotapi.CallbackQuery) {
-	markup := tgbotapi.NewInlineKeyboardMarkup()
-	message := query.Message
-
-	markup = menuMarkup
-
-	callbackCfg := tgbotapi.NewCallback(query.ID, "")
-	bot.Send(callbackCfg)
-
-	// Replace menu text and keyboard
-	msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, "", markup)
-	msg.ParseMode = tgbotapi.ModeHTML
-	bot.Send(msg)
+	switch query.Data {
+	case setLocationBtn:
+		msg := tgbotapi.NewMessage(query.Message.Chat.ID, "Enter city name")
+		bot.Send(msg)
+		break
+	case setAlertsBtn:
+		break
+	case setUVIndexThreshold:
+		break
+	}
 }
 
 func sendMenu(chatId int64) error {

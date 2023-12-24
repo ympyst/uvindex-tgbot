@@ -1,6 +1,6 @@
 module github.com/ympyst/uvindex-tgbot
 
-go 1.15
+go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
