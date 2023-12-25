@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 	"log"
@@ -54,27 +53,11 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the context
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 
 	// `updates` is a golang channel which receives telegram updates
 	updates := bot.GetUpdatesChan(u)
 
-	// Pass cancellable context to goroutine
-	go receiveUpdates(ctx, updates)
-
-	// Tell the user the bot is online
-	log.Println("Start listening for updates. Press enter to stop")
-
-	// Wait for a newline symbol, then cancel handling updates
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
-	cancel()
-
-}
-
-func receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
-	// `for {` means the loop is infinite until we manually stop it
 	for {
 		select {
 		// stop looping if ctx is cancelled
