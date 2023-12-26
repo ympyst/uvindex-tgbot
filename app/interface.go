@@ -1,6 +1,19 @@
 package app
 
+import (
+	"context"
+	"github.com/ympyst/uvindex-tgbot/model"
+)
+
 type Storage interface {
-	GetUserSettings(userId int64) *UserSettings
-	SetUserLocation(userId int64, location Location) error
+	GetUserSettingsOrCreate(ctx context.Context, userId int64) (model.UserSettings, error)
+	SetUserLocation(ctx context.Context, userId int64, location model.Location) error
+}
+
+type WeatherAPI interface {
+	GetCurrentUVIndex(ctx context.Context, location model.Location) (float32, error)
+}
+
+type LocationAPI interface {
+	SearchLocationByName(ctx context.Context, searchQuery string) ([]model.Location, error)
 }

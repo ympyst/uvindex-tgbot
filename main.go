@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
+	"fmt"
 	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
-	app *uvindexApp.App
+	a *uvindexApp.App
 	// Button texts
 	setLocationBtn = "Set location"
 	setAlertsBtn        = "Set alerts"
 	setUVIndexThreshold = "Set UV index threshold"
 
 	// Store current uv index
-	uv int32
+	uv float32
 	bot       *tgbotapi.BotAPI
 
 	// Keyboard layout for the first menu. One button, one row
@@ -45,7 +45,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	app = uvindexApp.NewApp()
+	a = uvindexApp.NewApp()
 
 	// Set this to true to log all interactions with telegram servers
 	bot.Debug = true
@@ -86,7 +86,9 @@ func handleUpdate(update tgbotapi.Update) {
 
 func handleMessage(message *tgbotapi.Message) {
 	user := message.From
+	userID := message.From.ID
 	text := message.Text
+	ctx := context.WithValue(context.Background(), "UserID", userID)
 
 	if user == nil {
 		return
@@ -97,7 +99,9 @@ func handleMessage(message *tgbotapi.Message) {
 
 	var err error
 	if strings.HasPrefix(text, "/") {
-		err = handleCommand(message.Chat.ID, text)
+		err = handleCommand(ctx, message.Chat.ID, text)
+	} else {
+		err = a.SetLocation(ctx, text)
 	}
 
 	if err != nil {
@@ -106,13 +110,18 @@ func handleMessage(message *tgbotapi.Message) {
 }
 
 // When we get a command, we react accordingly
-func handleCommand(chatId int64, command string) error {
+func handleCommand(ctx context.Context, chatId int64, command string) error {
 	var err error
+	var msg tgbotapi.MessageConfig
 
 	switch command {
 	case "/uv":
-		uv = app.GetCurrentUVIndex(context.Background())
-		msg := tgbotapi.NewMessage(chatId, strconv.Itoa(int(uv)))
+		uv, err = a.GetCurrentUVIndex(ctx)
+		if err != nil {
+			msg = tgbotapi.NewMessage(chatId, err.Error())
+		} else {
+			msg = tgbotapi.NewMessage(chatId, fmt.Sprintf("%v", uv))
+		}
 		bot.Send(msg)
 		break
 

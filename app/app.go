@@ -2,72 +2,68 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ympyst/uvindex-tgbot/storage"
-	weatherAPI "github.com/ympyst/uvindex-tgbot/weather"
-	"log"
-	"math"
-	"os"
+	"github.com/ympyst/uvindex-tgbot/weather"
 )
 
 const UserIDCtxKey = "UserID"
 
 type App struct {
-	weatherClient *weatherAPI.APIClient //TODO interface
+	WeatherAPI
+	LocationAPI
 	Storage
 }
 
 func NewApp() *App {
-	wc := weatherAPI.NewAPIClient(weatherAPI.NewConfiguration())
-
 	return &App{
-		wc,
+		weather.NewAPI(),
+		weather.NewLocationAPI(),
 		storage.NewStorage(),
 	}
 }
 
 func (a *App) SetLocation(ctx context.Context, searchQuery string) error {
-	_, err := a.getUserIDFromCtx(ctx)
+	uID, err := a.getUserIDFromCtx(ctx)
 	if err != nil {
 		return err
 	}
 
-	//authCtx := a.getAuthCtx(ctx)
-	//res, _, err := a.weatherClient.APIsApi.SearchAutocompleteWeather(authCtx, searchQuery)
-	//if err != nil {
-	//	log.Println(err)
-	//}
+	l, err := a.LocationAPI.SearchLocationByName(ctx, searchQuery)
+	if err != nil {
+		return err
+	}
+	if len(l) == 0 {
+		return errors.New("no suitable locations found")
+	}
+	if len(l) > 1 {
+		return errors.New("multiple locations found, try to specify")
+	}
+
+	err = a.Storage.SetUserLocation(ctx, uID, l[0])
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (a *App) GetCurrentUVIndex(ctx context.Context) int32 {
-	authCtx := a.getAuthCtx(ctx)
-	res, _, err := a.weatherClient.APIsApi.RealtimeWeather(authCtx, "Лос Анджелес", nil)
+func (a *App) GetCurrentUVIndex(ctx context.Context) (float32, error) {
+	uID, err := a.getUserIDFromCtx(ctx)
 	if err != nil {
-		log.Println(err)
+		return 0, err
+	}
+	u, err := a.Storage.GetUserSettingsOrCreate(ctx, uID)
+	if err != nil {
+		return 0, err
 	}
 
-	m, ok := res.(map[string]interface{})
-	if !ok {
-		log.Println("error converting RealtimeWeather result to map")
+	uv, err := a.WeatherAPI.GetCurrentUVIndex(ctx, u.Location)
+	if err != nil {
+		return 0, err
 	}
-	cur, ok := m["current"].(map[string]interface{})
-	if !ok {
-		log.Println("error converting RealtimeWeather result to map")
-	}
-	//log.Println(cur)
-	uv, ok := cur["uv"].(float64)
-	if !ok {
-		log.Println("error converting uv to float64")
-	}
-	return int32(math.Round(uv))
-}
-
-func (a *App) getAuthCtx(ctx context.Context) context.Context {
-	return context.WithValue(context.Background(), weatherAPI.ContextAPIKey, weatherAPI.APIKey{
-		Key: os.Getenv("WEATHER_API_TOKEN"),
-	})
+	return uv, nil
 }
 
 func (a *App) getUserIDFromCtx(ctx context.Context) (int64, error) {
