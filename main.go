@@ -138,7 +138,7 @@ func handleButton(query *tgbotapi.CallbackQuery) {
 }
 
 func sendMenu(chatId int64) error {
-	msg := tgbotapi.NewMessage(chatId, "")
+	msg := tgbotapi.NewMessage(chatId, "Choose setting you want to change")
 	msg.ParseMode = tgbotapi.ModeHTML
 	msg.ReplyMarkup = menuMarkup
 	_, err := bot.Send(msg)
