@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/ympyst/uvindex-tgbot/telegram"
+	"github.com/ympyst/uvindex-tgbot/app"
 )
 
 func main() {
-	t := telegram.NewTelegram()
+	a := app.NewApp()
 	ctx := context.Background()
 
-	t.Start(ctx)
+	a.Start(ctx)
 }
 

@@ -2,10 +2,11 @@ package app
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/storage"
 	"github.com/ympyst/uvindex-tgbot/weather"
+	"log"
 )
 
 const UserIDCtxKey = "UserID"
@@ -14,64 +15,70 @@ type App struct {
 	WeatherAPI
 	LocationAPI
 	Storage
+	*Telegram
+	handlers []UpdateHandler
 }
 
 func NewApp() *App {
+	h := []UpdateHandler{
+		NewLocationHandler(),
+		NewCurrentUVIndexHandler(),
+	}
+
 	return &App{
 		weather.NewAPI(),
 		weather.NewLocationAPI(),
 		storage.NewStorage(),
+		NewTelegram(),
+		h,
 	}
 }
 
-func (a *App) SetLocation(ctx context.Context, searchQuery string) error {
-	uID, err := a.getUserIDFromCtx(ctx)
-	if err != nil {
-		return err
-	}
+func (a *App) Start(ctx context.Context)  {
+	updates := a.Telegram.GetUpdatesChan()
+	messages := make(chan tgbotapi.Chattable, 10)
 
-	l, err := a.LocationAPI.SearchLocationByName(ctx, searchQuery)
-	if err != nil {
-		return err
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case update := <-updates:
+			a.handleUpdate(ctx, update, messages)
+		case msg := <-messages:
+			_, err := a.Telegram.bot.Send(msg)
+			if err != nil {
+				log.Printf("error sending message: %s", err.Error())
+			}
+		}
 	}
-	if len(l) == 0 {
-		return errors.New("no suitable locations found")
-	}
-	if len(l) > 1 {
-		return errors.New("multiple locations found, try to specify")
-	}
-
-	err = a.Storage.SetUserLocation(ctx, uID, l[0])
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func (a *App) GetCurrentUVIndex(ctx context.Context) (float32, error) {
-	uID, err := a.getUserIDFromCtx(ctx)
+func (a *App) handleUpdate(ctx context.Context, update tgbotapi.Update, msg chan<- tgbotapi.Chattable)  {
+	s, err := a.getState(ctx, update)
 	if err != nil {
-		return 0, err
+		log.Printf( "error handling update: %s", err.Error())
 	}
+
+	for _, h := range a.handlers {
+		h.Handle(ctx, update, &s, msg)
+	}
+	log.Printf( "state after handlers: %v", s)
+	err = a.Storage.SaveState(ctx, &s)
+	if err != nil {
+		log.Printf( "error saving new state: %s", err.Error())
+	}
+}
+
+func (a *App) getState(ctx context.Context, update tgbotapi.Update) (model.UserState, error) {
+	uID := a.Telegram.GetUserIDFromUpdate(update)
+	log.Printf( "userID: %v", uID)
+
 	u, err := a.Storage.GetUserSettingsOrCreate(ctx, uID)
 	if err != nil {
-		return 0, err
+		return model.UserState{}, err
 	}
 
-	uv, err := a.WeatherAPI.GetCurrentUVIndex(ctx, u.Location)
-	if err != nil {
-		return 0, err
-	}
-	return uv, nil
-}
-
-func (a *App) getUserIDFromCtx(ctx context.Context) (int64, error) {
-	u, ok := ctx.Value(UserIDCtxKey).(int64)
-	if !ok {
-		return 0, fmt.Errorf("can't convert %s value (%v) to int64", UserIDCtxKey, u)
-	}
-
+	log.Printf( "state: %v", u)
 	return u, nil
 }
 

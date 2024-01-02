@@ -10,36 +10,34 @@ import (
 const storageInitialCap = 100
 
 type Storage struct {
-	users map[int64]model.UserSettings
+	users map[int64]model.UserState
 }
 
 func NewStorage() *Storage {
 	return &Storage{
-		users: make(map[int64]model.UserSettings, storageInitialCap),
+		users: make(map[int64]model.UserState, storageInitialCap),
 	}
 }
 
-func (s *Storage) GetUserSettingsOrCreate(ctx context.Context, userId int64) (model.UserSettings, error) {
-	u, ok := s.users[userId]
+func (s *Storage) GetUserSettingsOrCreate(ctx context.Context, userId int64) (model.UserState, error) {
+	_, ok := s.users[userId]
 	if !ok {
-		s.users[userId] = model.UserSettings{
+		s.users[userId] = model.UserState{
 			UserID:        userId,
-			Location:      model.Location{},
-			AlertSchedule: model.AlertSchedule{},
 			UVThreshold:   model.DefaultUVThreshold,
+			State:         model.Start,
 		}
 	}
-	log.Println(s.users)
-	return u, nil
+	log.Printf("users: %v", s.users)
+	return s.users[userId], nil
 }
 
-func (s *Storage) SetUserLocation(ctx context.Context, userId int64, location model.Location) error {
-	if u, ok := s.users[userId]; ok {
-		u.Location = location
-		s.users[userId] = u
+func (s *Storage) SaveState(ctx context.Context, state *model.UserState) error {
+	if _, ok := s.users[state.UserID]; ok {
+		s.users[state.UserID] = *state
 	} else {
-		return fmt.Errorf("user %d not found", userId)
+		return fmt.Errorf("user %d not found", state.UserID)
 	}
-	log.Printf("%+v\n", s.users)
+	log.Printf("users: %v", s.users)
 	return nil
 }

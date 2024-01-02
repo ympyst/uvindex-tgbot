@@ -1,10 +1,8 @@
-package telegram
+package app
 
 import (
 	"context"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	uvindexApp "github.com/ympyst/uvindex-tgbot/app"
 	"log"
 	"os"
 	"strings"
@@ -14,7 +12,6 @@ const telegramApiTokenEnvKey = "TELEGRAM_API_TOKEN"
 
 type Telegram struct {
 	bot *tgbotapi.BotAPI
-	app *uvindexApp.App
 }
 
 // Button texts
@@ -22,7 +19,7 @@ const setLocationBtn = "Set location"
 const setAlertsBtn        = "Set alerts"
 const setUVIndexThreshold = "Set UV index threshold"
 
-func NewTelegram() *Telegram{
+func NewTelegram() *Telegram {
 	var err error
 	token := os.Getenv(telegramApiTokenEnvKey)
 	bot, err := tgbotapi.NewBotAPI(token)
@@ -35,27 +32,19 @@ func NewTelegram() *Telegram{
 
 	return &Telegram{
 		bot: bot,
-		app: uvindexApp.NewApp(),
 	}
 }
 
-func (t *Telegram) Start(ctx context.Context)  {
+func (t *Telegram) GetUpdatesChan() tgbotapi.UpdatesChannel {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
 	// `updates` is a golang channel which receives telegram updates
-	updates := t.bot.GetUpdatesChan(u)
+	return t.bot.GetUpdatesChan(u)
+}
 
-	for {
-		select {
-		// stop looping if ctx is cancelled
-		case <-ctx.Done():
-			return
-		// receive update from channel and then handle it
-		case update := <-updates:
-			t.handleUpdate(update)
-		}
-	}
+func (t *Telegram) GetUserIDFromUpdate(update tgbotapi.Update) int64 {
+	return update.SentFrom().ID
 }
 
 func (t *Telegram) handleUpdate(update tgbotapi.Update) {
@@ -89,7 +78,7 @@ func (t *Telegram) handleMessage(message *tgbotapi.Message) {
 	if strings.HasPrefix(text, "/") {
 		err = t.handleCommand(ctx, message.Chat.ID, text)
 	} else {
-		err = t.app.SetLocation(ctx, text)
+		//err = t.app.SetLocation(ctx, text)
 	}
 
 	if err != nil {
@@ -100,17 +89,17 @@ func (t *Telegram) handleMessage(message *tgbotapi.Message) {
 // When we get a command, we react accordingly
 func (t *Telegram) handleCommand(ctx context.Context, chatId int64, command string) error {
 	var err error
-	var msg tgbotapi.MessageConfig
+	//var msg tgbotapi.MessageConfig
 
 	switch command {
 	case "/uv":
-		uv, err := t.app.GetCurrentUVIndex(ctx)
-		if err != nil {
-			msg = tgbotapi.NewMessage(chatId, err.Error())
-		} else {
-			msg = tgbotapi.NewMessage(chatId, fmt.Sprintf("%v", uv))
-		}
-		t.bot.Send(msg)
+		//uv, err := t.app.GetCurrentUVIndex(ctx)
+		//if err != nil {
+		//	msg = tgbotapi.NewMessage(chatId, err.Error())
+		//} else {
+		//	msg = tgbotapi.NewMessage(chatId, fmt.Sprintf("%v", uv))
+		//}
+		//t.bot.Send(msg)
 		break
 
 	case "/menu":
