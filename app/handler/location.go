@@ -1,4 +1,4 @@
-package app
+package handler
 
 import (
 	"context"
@@ -9,6 +9,10 @@ import (
 	"log"
 	"strings"
 )
+
+type LocationAPI interface {
+	SearchLocationByName(ctx context.Context, searchQuery string) ([]model.Location, error)
+}
 
 type LocationHandler struct {
 	LocationAPI
@@ -24,9 +28,9 @@ func (h LocationHandler) Handle(ctx context.Context, update tgbotapi.Update, sta
 	if update.Message == nil || strings.HasPrefix(update.Message.Text, "/") {
 		return
 	}
-	//if state.State != model.WaitingForLocation {
-	//	return
-	//}
+	if state.State != model.WaitingForLocation {
+		return
+	}
 
 	ls, err := h.LocationAPI.SearchLocationByName(ctx, update.Message.Text)
 	if err != nil {
@@ -49,26 +53,4 @@ func (h LocationHandler) Handle(ctx context.Context, update tgbotapi.Update, sta
 
 	log.Printf("state after setting location: %v", state)
 	msg <- tgbotapi.NewMessage(update.FromChat().ID, m)
-}
-
-type CurrentUVIndexHandler struct {
-	WeatherAPI
-}
-
-func NewCurrentUVIndexHandler() CurrentUVIndexHandler {
-	return CurrentUVIndexHandler{
-		weather.NewAPI(),
-	}
-}
-
-func (h CurrentUVIndexHandler) Handle(ctx context.Context, update tgbotapi.Update, state *model.UserState, msg chan<- tgbotapi.Chattable)  {
-	if state.State != model.Ready || update.Message == nil || update.Message.Text != "/uv" {
-		return
-	}
-	uv, err := h.WeatherAPI.GetCurrentUVIndex(ctx, state.Location)
-	if err != nil {
-		log.Printf("error getting current UV index: %s", err.Error())
-	}
-
-	msg <- tgbotapi.NewMessage(update.FromChat().ID, fmt.Sprintf("%v", uv))
 }

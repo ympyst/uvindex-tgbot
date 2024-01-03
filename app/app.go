@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ympyst/uvindex-tgbot/app/handler"
 	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/storage"
 	"github.com/ympyst/uvindex-tgbot/weather"
@@ -21,8 +22,9 @@ type App struct {
 
 func NewApp() *App {
 	h := []UpdateHandler{
-		NewLocationHandler(),
-		NewCurrentUVIndexHandler(),
+		handler.NewStartHandler(),
+		handler.NewLocationHandler(),
+		handler.NewCurrentUVIndexHandler(),
 	}
 
 	return &App{
