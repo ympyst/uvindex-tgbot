@@ -25,6 +25,7 @@ func NewApp() *App {
 		handler.NewStartHandler(),
 		handler.NewLocationHandler(),
 		handler.NewCurrentUVIndexHandler(),
+		handler.NewLocationCommandHandler(),
 	}
 
 	return &App{
@@ -64,7 +65,7 @@ func (a *App) handleUpdate(ctx context.Context, update tgbotapi.Update, msg chan
 	for _, h := range a.handlers {
 		h.Handle(ctx, update, &s, msg)
 	}
-	log.Printf( "state after handlers: %v", s)
+	log.Printf( "state after handling update: %v", s)
 	err = a.Storage.SaveState(ctx, &s)
 	if err != nil {
 		log.Printf( "error saving new state: %s", err.Error())
@@ -73,7 +74,6 @@ func (a *App) handleUpdate(ctx context.Context, update tgbotapi.Update, msg chan
 
 func (a *App) getState(ctx context.Context, update tgbotapi.Update) (model.UserState, error) {
 	uID := a.Telegram.GetUserIDFromUpdate(update)
-	log.Printf( "userID: %v", uID)
 
 	u, err := a.Storage.GetUserSettingsOrCreate(ctx, uID)
 	if err != nil {

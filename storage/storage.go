@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ympyst/uvindex-tgbot/model"
-	"log"
 )
 
 const storageInitialCap = 100
@@ -28,7 +27,6 @@ func (s *Storage) GetUserSettingsOrCreate(ctx context.Context, userId int64) (mo
 			State:         model.Start,
 		}
 	}
-	log.Printf("users: %v", s.users)
 	return s.users[userId], nil
 }
 
@@ -38,6 +36,5 @@ func (s *Storage) SaveState(ctx context.Context, state *model.UserState) error {
 	} else {
 		return fmt.Errorf("user %d not found", state.UserID)
 	}
-	log.Printf("users: %v", s.users)
 	return nil
 }

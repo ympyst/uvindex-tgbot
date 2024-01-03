@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/weather/swagger"
-	"log"
 	"os"
 )
 
@@ -45,7 +44,6 @@ func (l *LocationAPI) SearchLocationByName(ctx context.Context, searchQuery stri
 			Localtime:      "",
 		}
 	}
-	log.Println(locations)
 	return locations, nil
 }
 
