@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/weather/swagger"
-	"log"
 	"os"
 )
 
@@ -38,7 +37,6 @@ func (a *API) GetCurrentUVIndex(ctx context.Context, location model.Location) (f
 	if !ok {
 		return 0, errors.New("error converting RealtimeWeather result to map")
 	}
-	log.Println(cur)
 	uv, ok := cur["uv"].(float64)
 	if !ok {
 		return 0, errors.New("error converting uv to float32")

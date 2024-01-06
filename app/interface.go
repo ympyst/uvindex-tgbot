@@ -11,14 +11,6 @@ type Storage interface {
 	SaveState(ctx context.Context, state *model.UserState) error
 }
 
-type WeatherAPI interface {
-	GetCurrentUVIndex(ctx context.Context, location model.Location) (float32, error)
-}
-
-type LocationAPI interface {
-	SearchLocationByName(ctx context.Context, searchQuery string) ([]model.Location, error)
-}
-
 type UpdateHandler interface {
 	Handle(ctx context.Context, update tgbotapi.Update, state *model.UserState, msg chan<- tgbotapi.Chattable)
 }

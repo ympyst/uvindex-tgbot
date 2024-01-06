@@ -44,7 +44,7 @@ func (t *Telegram) GetUpdatesChan() tgbotapi.UpdatesChannel {
 }
 
 func (t *Telegram) GetUserIDFromUpdate(update tgbotapi.Update) int64 {
-	return update.SentFrom().ID
+	return update.FromChat().ID
 }
 
 func (t *Telegram) handleUpdate(update tgbotapi.Update) {

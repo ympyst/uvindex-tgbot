@@ -51,6 +51,5 @@ func (h LocationHandler) Handle(ctx context.Context, update tgbotapi.Update, sta
 		m = fmt.Sprintf("Location set to: %s, %s, %s", l.Name, l.Region, l.Country)
 	}
 
-	log.Printf("state after setting location: %v", state)
 	msg <- tgbotapi.NewMessage(update.FromChat().ID, m)
 }

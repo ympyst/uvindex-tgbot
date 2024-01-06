@@ -6,15 +6,10 @@ import (
 	"github.com/ympyst/uvindex-tgbot/app/handler"
 	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/storage"
-	"github.com/ympyst/uvindex-tgbot/weather"
 	"log"
 )
 
-const UserIDCtxKey = "UserID"
-
 type App struct {
-	WeatherAPI
-	LocationAPI
 	Storage
 	*Telegram
 	handlers []UpdateHandler
@@ -29,8 +24,6 @@ func NewApp() *App {
 	}
 
 	return &App{
-		weather.NewAPI(),
-		weather.NewLocationAPI(),
 		storage.NewStorage(),
 		NewTelegram(),
 		h,
