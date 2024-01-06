@@ -7,6 +7,7 @@ import (
 	"github.com/ympyst/uvindex-tgbot/model"
 	"github.com/ympyst/uvindex-tgbot/storage"
 	"log"
+	"os"
 )
 
 type App struct {
@@ -23,8 +24,21 @@ func NewApp() *App {
 		handler.NewLocationCommandHandler(),
 	}
 
+	var s Storage
+	var err error
+
+	if os.Getenv("IN_MEMORY_STORAGE") == "1" {
+		s = storage.NewMemory()
+	} else {
+		s, err = storage.NewMongo()
+		if err != nil {
+			log.Printf("error creating storage: %s", err.Error())
+			return nil
+		}
+	}
+
 	return &App{
-		storage.NewStorage(),
+		s,
 		NewTelegram(),
 		h,
 	}
@@ -72,7 +86,7 @@ func (a *App) handleUpdate(ctx context.Context, update tgbotapi.Update, msg chan
 func (a *App) getState(ctx context.Context, update tgbotapi.Update) (*model.UserState, error) {
 	uID := a.Telegram.GetUserIDFromUpdate(update)
 
-	u, err := a.Storage.GetUserSettingsOrCreate(ctx, uID)
+	u, err := a.Storage.GetUserStateOrCreate(ctx, uID)
 	if err != nil {
 		return nil, err
 	}

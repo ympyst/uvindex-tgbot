@@ -3,13 +3,13 @@ package model
 const DefaultUVThreshold = 3.0
 
 type UserState struct {
-	Id      int64 `json:"id"`
-	IsGroup bool  `json:"is_group"`
-	Username      string `json:"username"`
-	Location      `json:"location,omitempty"`
-	AlertSchedule `json:"alert_schedule,omitempty"`
-	UVThreshold   float32 `json:"uv_threshold,omitempty"`
-	State         `json:"state"`
+	Id            int64  `bson:"id"`
+	IsGroup       bool   `bson:"is_group"`
+	Username      string `bson:"username"`
+	Location      `bson:"location,omitempty"`
+	AlertSchedule `bson:"alert_schedule,omitempty"`
+	UVThreshold   float32 `bson:"uv_threshold,omitempty"`
+	State         `bson:"state"`
 }
 
 type State int
