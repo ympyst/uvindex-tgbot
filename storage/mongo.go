@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"os"
 )
 
 type Mongo struct {
@@ -16,7 +17,7 @@ type Mongo struct {
 }
 
 func NewMongo() (*Mongo, error) {
-	uri := "mongodb://localhost:27017"
+	uri := os.Getenv("MONGODB_URI")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
