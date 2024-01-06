@@ -8,6 +8,8 @@ import (
 
 type Storage interface {
 	GetUserSettingsOrCreate(ctx context.Context, userId int64) (model.UserState, error)
+	SetUsername(ctx context.Context, userId int64, username string) error
+	SetIsGroup(ctx context.Context, userId int64, isGroup bool) error
 	SaveState(ctx context.Context, state *model.UserState) error
 }
 

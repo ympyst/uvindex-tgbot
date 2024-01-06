@@ -47,6 +47,14 @@ func (t *Telegram) GetUserIDFromUpdate(update tgbotapi.Update) int64 {
 	return update.FromChat().ID
 }
 
+func (t *Telegram) GetUserNameFromUpdate(update tgbotapi.Update) string {
+	return update.FromChat().UserName
+}
+
+func (t *Telegram) GetIsGroupFromUpdate(update tgbotapi.Update) bool {
+	return update.FromChat().IsGroup()
+}
+
 func (t *Telegram) handleUpdate(update tgbotapi.Update) {
 	switch {
 	// Handle messages
@@ -65,7 +73,7 @@ func (t *Telegram) handleMessage(message *tgbotapi.Message) {
 	user := message.From
 	userID := message.From.ID
 	text := message.Text
-	ctx := context.WithValue(context.Background(), "UserID", userID)
+	ctx := context.WithValue(context.Background(), "Id", userID)
 
 	if user == nil {
 		return

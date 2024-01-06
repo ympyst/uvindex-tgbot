@@ -54,26 +54,30 @@ func (a *App) handleUpdate(ctx context.Context, update tgbotapi.Update, msg chan
 	if err != nil {
 		log.Printf( "error handling update: %s", err.Error())
 	}
+	if s.State == model.Start {
+		s.Username = a.Telegram.GetUserNameFromUpdate(update)
+		s.IsGroup =  a.Telegram.GetIsGroupFromUpdate(update)
+	}
 
 	for _, h := range a.handlers {
-		h.Handle(ctx, update, &s, msg)
+		h.Handle(ctx, update, s, msg)
 	}
 	log.Printf( "state after handling update: %v", s)
-	err = a.Storage.SaveState(ctx, &s)
+	err = a.Storage.SaveState(ctx, s)
 	if err != nil {
 		log.Printf( "error saving new state: %s", err.Error())
 	}
 }
 
-func (a *App) getState(ctx context.Context, update tgbotapi.Update) (model.UserState, error) {
+func (a *App) getState(ctx context.Context, update tgbotapi.Update) (*model.UserState, error) {
 	uID := a.Telegram.GetUserIDFromUpdate(update)
 
 	u, err := a.Storage.GetUserSettingsOrCreate(ctx, uID)
 	if err != nil {
-		return model.UserState{}, err
+		return nil, err
 	}
 
 	log.Printf( "state: %v", u)
-	return u, nil
+	return &u, nil
 }
 
