@@ -34,14 +34,12 @@ func (l *LocationAPI) SearchLocationByName(ctx context.Context, searchQuery stri
 	for i := 0; i < len(resArr); i++ {
 		item := resArr[i].(map[string]interface{})
 		locations[i] = model.Location{
+			Id:             int64(item["id"].(float64)),
 			Name:           item["name"].(string),
 			Region:         item["region"].(string),
 			Country:        item["country"].(string),
-			Lat:            0,
-			Lon:            0,
-			TzId:           "",
-			LocaltimeEpoch: 0,
-			Localtime:      "",
+			Lat:            item["lat"].(float64),
+			Lon:            item["lon"].(float64),
 		}
 	}
 	return locations, nil

@@ -21,11 +21,12 @@ const (
 )
 
 type Location struct {
+	Id             int64   `json:"id"`
 	Name           string  `json:"name,omitempty"`
 	Region         string  `json:"region,omitempty"`
 	Country        string  `json:"country,omitempty"`
-	Lat            float32 `json:"lat,omitempty"`
-	Lon            float32 `json:"lon,omitempty"`
+	Lat            float64 `json:"lat,omitempty"`
+	Lon            float64 `json:"lon,omitempty"`
 	TzId           string  `json:"tz_id,omitempty"`
 	LocaltimeEpoch int32   `json:"localtime_epoch,omitempty"`
 	Localtime      string  `json:"localtime,omitempty"`
